@@ -58,7 +58,7 @@ class JRubyMeal
   end
 
   def openjdk
-    @openjdk ||= OpenJDK7Recipe.new('openjdk', '7')
+    @openjdk ||= OpenJDK8Recipe.new('openjdk', '8')
   end
 
   def maven
