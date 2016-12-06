@@ -18,12 +18,21 @@ class JRubyMeal
     # OpenJDK8. Unable to use java-buildpack OpenJDK8 because it only contains
     # the JRE, not the JDK.
     # https://www.pivotaltracker.com/story/show/106836266
-    puts `apt-get install software-properties-common -y`
-    puts `add-apt-repository ppa:openjdk-r/ppa -y`
-    puts `apt-get update`
-    puts `apt-get install openjdk-8-jdk -y`
+    # puts `apt-get install software-properties-common -y`
+    # puts `add-apt-repository ppa:openjdk-r/ppa -y`
+    # puts `apt-get update`
+    # puts `apt-get install openjdk-8-jdk -y`
 
-    openjdk.cook
+    puts `mkdir /opt/java`
+    puts `wget https://java-buildpack.cloudfoundry.org/openjdk-jdk/trusty/x86_64/openjdk-1.8.0_111.tar.gz -O /opt/java/openjdk-1.8-jdk.tar.gz`
+    #puts `wget https://java-buildpack.cloudfoundry.org/openjdk-jdk/trusty/x86_64/openjdk-1.8.0_91-unlimited-crypto.tar.gz -O /opt/java/openjdk-1.8-jdk.tar.gz`
+    Dir.chdir('/opt/java') do
+      puts `tar xvf openjdk-1.8-jdk.tar.gz`
+    end
+
+    #openjdk.cook
+    ENV['JAVA_HOME'] = '/opt/java'
+    ENV['PATH'] = "#{ENV['PATH']}:/opt/java/bin"
 
     ant.cook
     ant.activate
