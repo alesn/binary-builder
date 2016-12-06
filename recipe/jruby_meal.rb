@@ -18,6 +18,11 @@ class JRubyMeal
     # OpenJDK8. Unable to use java-buildpack OpenJDK8 because it only contains
     # the JRE, not the JDK.
     # https://www.pivotaltracker.com/story/show/106836266
+    puts `apt-get install software-properties-common -y`
+    puts `add-apt-repository ppa:openjdk-r/ppa -y`
+    puts `apt-get update`
+    puts `apt-get install openjdk-8-jdk -y`
+
     openjdk.cook
 
     ant.cook
@@ -58,7 +63,7 @@ class JRubyMeal
   end
 
   def openjdk
-    @openjdk ||= OpenJDK7Recipe.new('openjdk', '7')
+    @openjdk ||= OpenJDK8Recipe.new('openjdk', '8')
   end
 
   def maven
