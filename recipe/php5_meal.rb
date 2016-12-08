@@ -302,11 +302,11 @@ class Php5Meal
   end
 
   def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.6', md5: '7d2b42033a0570e99080beb6a7db1478')
+    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.7', md5: 'ed709d4a4f4bf5f85caeb26f0a73ddd6')
   end
 
   def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.1', md5: '4a67015af27eb4fbb4e32c23d2610815',
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.2', md5: '43e2aa0360af1787db03f5cc6cd1b676',
                                                               php_path: php_recipe.path)
     @phalcon_recipe.set_php_version('php5')
     @phalcon_recipe

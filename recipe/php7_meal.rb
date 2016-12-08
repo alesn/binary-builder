@@ -172,11 +172,11 @@ class Php7Meal
     standard_pecl('imagick', '3.4.3RC1', '32042fc3043f013047927de21ff15a47')
     standard_pecl('mailparse', '3.0.1', '5ae0643a11159414c7e790c73a9e25ec')
     standard_pecl('mongodb', '1.1.9', '0644ad0451e5913cbac22e3456ba239b')
-    standard_pecl('msgpack', '2.0.1', '4d1db4592ffa4101601aefc794191de5')
-    standard_pecl('rdkafka', '2.0.0', '87bce41f61818fd7bc442f71d4c28cde')
+    standard_pecl('msgpack', '2.0.2', '02f7e109d438072c4b642b01cf78533e')
+    standard_pecl('rdkafka', '2.0.1', '0994cf55465429676d4b21fcba38cb96')
     standard_pecl('redis', '3.0.0', '1b90e954afc1f9993cc0552d0f1d1daa')
     standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
-    standard_pecl('xdebug', '2.4.1', '03f52af10108450942c9c0ac3b72637f')
+    standard_pecl('xdebug', '2.5.0', '5306da5948e195c2e4585c9abd7741f9')
     standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
     amqppecl_recipe.cook
     luapecl_recipe.cook
@@ -250,7 +250,7 @@ class Php7Meal
   end
 
   def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.6', md5: '7d2b42033a0570e99080beb6a7db1478')
+    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.7', md5: 'ed709d4a4f4bf5f85caeb26f0a73ddd6')
   end
 
   def luapecl_recipe
@@ -271,7 +271,7 @@ class Php7Meal
   end
 
   def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.1', md5: '4a67015af27eb4fbb4e32c23d2610815',
+    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.2', md5: '43e2aa0360af1787db03f5cc6cd1b676',
                                                               php_path: php_recipe.path)
     @phalcon_recipe.set_php_version('php7')
     @phalcon_recipe
