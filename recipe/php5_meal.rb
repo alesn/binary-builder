@@ -265,20 +265,25 @@ class Php5Meal
   private
 
   def files_hashs
-      @native_modules.map(&:files_hashs).flatten +
-      @extensions.map(&:files_hashs).flatten +
-      (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
-      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : [])
+    native_module_hashes = @native_modules.map do |recipe|
+      recipe.send(:files_hashs)
+    end.flatten
+
+    extension_hashes = @extensions.map do |recipe|
+      recipe.send(:files_hashs)
+    end.flatten
+
+    extension_hashes + native_module_hashes +
+    (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
+    (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : [])
   end
 
   def php_recipe
-    rabbitmq_recipe = @native_modules.detect{|r| r.name=='rabbitmq'}
     hiredis_recipe = @native_modules.detect{|r| r.name=='hiredis'}
     libmemcached_recipe = @native_modules.detect{|r| r.name=='libmemcached'}
     ioncube_recipe = @extensions.detect{|r| r.name=='ioncube'}
 
     @php_recipe ||= Php5Recipe.new(@name, @version, {
-      rabbitmq_path: File.join(rabbitmq_recipe.path, "rabbitmq-c-#{rabbitmq_recipe.version}", 'librabbitmq'),
       hiredis_path: hiredis_recipe.path,
       libmemcached_path: libmemcached_recipe.path,
       ioncube_path: ioncube_recipe.path

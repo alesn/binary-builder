@@ -123,6 +123,58 @@ class Php7Meal
     @name    = name
     @version = version
     @options = options
+    @native_modules = []
+    @extensions = []
+
+    create_native_module_recipes
+    create_extension_recipes
+
+    (@native_modules + @extensions).each do |recipe|
+      recipe.instance_variable_set('@php_path', php_recipe.path)
+    end
+  end
+
+  def create_native_module_recipes
+    return unless @options[:php_extensions_file]
+    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+
+    php_extensions_hash['native_modules'].each do |hash|
+      klass = Kernel.const_get(hash['klass'])
+
+      @native_modules << klass.new(
+        hash['name'],
+        hash['version'],
+        md5: hash['md5']
+      )
+    end
+  end
+
+  def create_extension_recipes
+    return unless @options[:php_extensions_file]
+    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+
+    php_extensions_hash['extensions'].each do |hash|
+      klass = Kernel.const_get(hash['klass'])
+
+      @extensions << klass.new(
+        hash['name'],
+        hash['version'],
+        md5: hash['md5']
+      )
+    end
+
+    @extensions.each do |recipe|
+      case recipe.name
+      when 'amqp'
+        recipe.instance_variable_set('@rabbitmq_path', @native_modules.detect{|r| r.name=='rabbitmq'}.work_path)
+      when 'lua'
+        recipe.instance_variable_set('@lua_path', @native_modules.detect{|r| r.name=='lua'}.path)
+      when 'phalcon'
+        recipe.instance_variable_set('@php_version', 'php5')
+      when 'phpiredis'
+        recipe.instance_variable_set('@hiredis_path', @native_modules.detect{|r| r.name=='hiredis'}.path)
+      end
+    end
   end
 
   def cook
@@ -158,38 +210,17 @@ class Php7Meal
 
     install_cassandra_dependencies
 
-    if IonCubeRecipe.build_ioncube?(version)
-      ioncube_recipe.cook
-    end
-
     php_recipe.cook
     php_recipe.activate
 
-    # native dependencies
-    hiredis_recipe.cook
-    phpiredis_recipe.cook
-    rabbitmq_recipe.cook
-    lua_recipe.cook
-    snmp_recipe.cook
-    librdkafka_recipe.cook
+    # native libraries
+    @native_modules.each do |recipe|
+      recipe.cook
+    end
 
     # php extensions
-    standard_pecl('apcu', '5.1.8', '0ef8be2ee8acb4dba5a66b247a254995')
-    standard_pecl('cassandra', '1.2.2', '2226a4d66f8e0a4de85656f10472afc5')
-    standard_pecl('imagick', '3.4.3RC2', 'd488ccdedbf8077e690548dd27acf820')
-    standard_pecl('mailparse', '3.0.2', '4bd96a980013374f23a7461cc0a919aa')
-    standard_pecl('mongodb', '1.2.3', '133c77a004c5b26fa2cea8eff2cf46a1')
-    standard_pecl('msgpack', '2.0.2', '02f7e109d438072c4b642b01cf78533e')
-    standard_pecl('rdkafka', '3.0.0', 'c798343029fd4a7c8fe3fae365d438df')
-    standard_pecl('redis', '3.1.0', '897400f375ef6a9288fa3cb07c971786')
-    standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
-    standard_pecl('xdebug', '2.5.0', '5306da5948e195c2e4585c9abd7741f9')
-    standard_pecl('yaf', '3.0.4', '1420d91ca5deb31147b25bd08124e400')
-    amqppecl_recipe.cook
-    luapecl_recipe.cook
-
-    if PhalconRecipe.build_phalcon?(version)
-      phalcon_recipe.cook
+    @extensions.each do |recipe|
+      recipe.cook if should_cook?(recipe)
     end
 
     if OraclePeclRecipe.oracle_sdk?
@@ -197,6 +228,17 @@ class Php7Meal
 
       oracle_recipe.cook
       oracle_pdo_recipe.cook
+    end
+  end
+
+  def should_cook?(recipe)
+    case recipe.name
+    when 'phalcon'
+       PhalconRecipe.build_phalcon?(version)
+    when 'ioncube'
+       IonCubeRecipe.build_ioncube?(version)
+    else
+       true
     end
   end
 
@@ -227,46 +269,27 @@ class Php7Meal
   private
 
   def files_hashs
-    amqppecl_recipe.send(:files_hashs) +
-      hiredis_recipe.send(:files_hashs) +
-      librdkafka_recipe.send(:files_hashs) +
-      lua_recipe.send(:files_hashs) +
-      luapecl_recipe.send(:files_hashs) +
-      (PhalconRecipe.build_phalcon?(version) ? phalcon_recipe.send(:files_hashs) : []) +
-      phpiredis_recipe.send(:files_hashs) +
-      rabbitmq_recipe.send(:files_hashs) +
-      (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
-      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
-      @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
-  end
+    native_module_hashes = @native_modules.map do |recipe|
+      recipe.send(:files_hashs)
+    end.flatten
 
-  def standard_pecl(name, version, md5)
-    @pecl_recipes ||= []
-    recipe = PeclRecipe.new(name, version, md5: md5,
-                                           php_path: php_recipe.path)
-    recipe.cook
-    @pecl_recipes << recipe
-  end
+    extension_hashes = @extensions.map do |recipe|
+      recipe.send(:files_hashs)
+    end.flatten
 
-  def snmp_recipe
-    SnmpRecipe.new(php_recipe.path)
+    extension_hashes + native_module_hashes +
+    (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
+    (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : [])
   end
 
   def php_recipe
+    hiredis_recipe = @native_modules.detect{|r| r.name=='hiredis'}
+    ioncube_recipe = @extensions.detect{|r| r.name=='ioncube'}
+
     @php_recipe ||= Php7Recipe.new(@name, @version, {
       hiredis_path: hiredis_recipe.path,
       ioncube_path: ioncube_recipe.path
     }.merge(DetermineChecksum.new(@options).to_h))
-  end
-
-  def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.8', md5: '49851554b1e448142b8576e399ae3b19')
-  end
-
-  def luapecl_recipe
-    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '2.0.2', md5: 'beb0c9b1c6ed2457d614607c8a1537af',
-                                                          php_path: php_recipe.path,
-                                                          lua_path: lua_recipe.path)
   end
 
   def oracle_recipe
@@ -278,12 +301,5 @@ class Php7Meal
     @oracle_pdo_recipe ||= OraclePdoRecipe.new('pdo_oci', version,
                                                php_source: "#{php_recipe.send(:tmp_path)}/php-#{version}",
                                                php_path: php_recipe.path)
-  end
-
-  def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.3', md5: '5a6c376782e50c63735601f92aec6a7d',
-                                                              php_path: php_recipe.path)
-    @phalcon_recipe.set_php_version('php7')
-    @phalcon_recipe
   end
 end

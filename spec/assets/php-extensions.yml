@@ -25,6 +25,7 @@ native_modules:
   klass: LibRdKafkaRecipe
 
 extensions:
+  #standard pecl
 - name: apcu
   version: 4.0.11
   md5: 13c0c0dd676e5a7905d54fa985d0ee62
@@ -69,10 +70,6 @@ extensions:
   version: 0.5.7
   md5: b87b5c5e0dab9f41c824201abfbf363d
   klass: PeclRecipe
-- name: phpiredis
-  version: 1.0.0
-  md5: d84a6e7e3a54744269fd776d7be80be1
-  klass: PHPIRedisRecipe
 - name: protocolbuffers
   version: 0.2.6
   md5: a304ca632b0d7c5710d5590ac06248a9
@@ -97,6 +94,8 @@ extensions:
   version: 2.3.5
   md5: 77d5d9d6c8471737395350966986bc2e
   klass: PeclRecipe
+
+  #non-standard
 - name: amqp
   version: 1.7.1
   md5: 901befb3ba9c906e88ae810f83599baf
@@ -109,14 +108,22 @@ extensions:
   version: 1.1.0
   md5: 58bd532957473f2ac87f1032c4aa12b5
   klass: LuaPeclRecipe
-- name: phpprotobufpecl
-  version: 0.11.1
-  md5: adbf5214bfd44ce18962dd49f5640552
-  klass: PHPProtobufPeclRecipe
+- name: memcached
+  version: 2.2.0
+  md5: 28937c6144f734e000c6300242f44ce6
+  klass: MemcachedPeclRecipe
 - name: phalcon
   version: 3.0.3
   md5: 5a6c376782e50c63735601f92aec6a7d
   klass: PhalconRecipe
+- name: phpiredis
+  version: 1.0.0
+  md5: d84a6e7e3a54744269fd776d7be80be1
+  klass: PHPIRedisRecipe
+- name: phpprotobufpecl
+  version: 0.11.1
+  md5: adbf5214bfd44ce18962dd49f5640552
+  klass: PHPProtobufPeclRecipe
 - name: suhosinpecl
   version: 0.9.38
   md5: 0c26402752b0aff69e4b891f062a52bf
@@ -133,9 +140,5 @@ extensions:
   version: 0bbf2a2ac3
   md5: 1df4aebf1cb24e7cf369b3af357106fc
   klass: XhprofPeclRecipe
-- name: memcached
-  version: 2.2.0
-  md5: 28937c6144f734e000c6300242f44ce6
-  klass: MemcachedPeclRecipe
 
 
