@@ -242,10 +242,6 @@ class PhalconRecipe < PeclRecipe
     ]
   end
 
-  def set_php_version(php_version)
-    @php_version = php_version
-  end
-
   def work_path
     "#{super}/build/#{@php_version}/64bits"
   end
@@ -306,8 +302,12 @@ class XhprofPeclRecipe < PeclRecipe
 end
 
 class SnmpRecipe
-  def initialize(php_path)
-    @php_path = php_path
+  attr_reader :name, :version
+
+  def initialize(name, version, options)
+    @name = name
+    @version = version
+    @options = options
   end
 
   def cook
@@ -337,37 +337,6 @@ class SnmpRecipe
       cp -R /usr/share/doc/mibrfcs mibs/originals
     eof
   end
-end
-
-# PHP 5 and PHP 7 Common recipes
-
-def hiredis_recipe
-  HiredisRecipe.new('hiredis', '0.13.3', md5: '43dca1445ec6d3b702821dba36000279')
-end
-
-def phpiredis_recipe
-  PHPIRedisRecipe.new('phpiredis', '1.0.0', md5: 'd84a6e7e3a54744269fd776d7be80be1',
-                                                php_path: php_recipe.path,
-                                                hiredis_path: hiredis_recipe.path)
-end
-
-
-def amqppecl_recipe
-  AmqpPeclRecipe.new('amqp', '1.7.1', md5: '901befb3ba9c906e88ae810f83599baf',
-                                      php_path: php_recipe.path,
-                                      rabbitmq_path: rabbitmq_recipe.work_path)
-end
-
-def lua_recipe
-  LuaRecipe.new('lua', '5.3.3', md5: '703f75caa4fdf4a911c1a72e67a27498')
-end
-
-def rabbitmq_recipe
-  RabbitMQRecipe.new('rabbitmq', '0.8.0', md5: '51d5827651328236ecb7c60517c701c2')
-end
-
-def librdkafka_recipe
-  LibRdKafkaRecipe.new('librdkafka', '0.9.2', md5: 'f2cc5ca6a149928c3cb34398379a5024')
 end
 
 def install_cassandra_dependencies

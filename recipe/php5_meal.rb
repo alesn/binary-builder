@@ -124,6 +124,60 @@ class Php5Meal
     @name    = name
     @version = version
     @options = options
+    @native_modules = []
+    @extensions = []
+
+    create_native_module_recipes
+    create_extension_recipes
+
+    (@native_modules + @extensions).each do |recipe|
+      recipe.instance_variable_set('@php_path', php_recipe.path)
+    end
+  end
+
+  def create_native_module_recipes
+    return unless @options[:php_extensions_file]
+    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+
+    php_extensions_hash['native_modules'].each do |hash|
+      klass = Kernel.const_get(hash['klass'])
+
+      @native_modules << klass.new(
+        hash['name'],
+        hash['version'],
+        md5: hash['md5']
+      )
+    end
+  end
+
+  def create_extension_recipes
+    return unless @options[:php_extensions_file]
+    php_extensions_hash = YAML.load_file(@options[:php_extensions_file])
+
+    php_extensions_hash['extensions'].each do |hash|
+      klass = Kernel.const_get(hash['klass'])
+
+      @extensions << klass.new(
+        hash['name'],
+        hash['version'],
+        md5: hash['md5']
+      )
+    end
+
+    @extensions.each do |recipe|
+      case recipe.name
+      when 'amqp'
+        recipe.instance_variable_set('@rabbitmq_path', @native_modules.detect{|r| r.name=='rabbitmq'}.work_path)
+      when 'memcached'
+        recipe.instance_variable_set('@libmemcached_path', @native_modules.detect{|r| r.name=='libmemcached'}.path)
+      when 'lua'
+        recipe.instance_variable_set('@lua_path', @native_modules.detect{|r| r.name=='lua'}.path)
+      when 'phalcon'
+        recipe.instance_variable_set('@php_version', 'php5')
+      when 'phpiredis'
+        recipe.instance_variable_set('@hiredis_path', @native_modules.detect{|r| r.name=='hiredis'}.path)
+      end
+    end
   end
 
   def cook
@@ -163,47 +217,18 @@ class Php5Meal
 
     install_cassandra_dependencies
 
-    ioncube_recipe.cook
-
     php_recipe.cook
     php_recipe.activate
 
     # native libraries
-    rabbitmq_recipe.cook
-    lua_recipe.cook
-    hiredis_recipe.cook
-    phpiredis_recipe.cook
-    snmp_recipe.cook
-    libmemcached_recipe.cook
-    librdkafka_recipe.cook
+    @native_modules.each do |recipe|
+      recipe.cook
+    end
 
     # php extensions
-    standard_pecl('apcu', '4.0.11', '13c0c0dd676e5a7905d54fa985d0ee62')
-    standard_pecl('cassandra', '1.2.2', '2226a4d66f8e0a4de85656f10472afc5')
-    standard_pecl('igbinary', '2.0.1', '9fedba9b02ee639cb19807cf924f576c')
-    standard_pecl('imagick', '3.4.3RC2', 'd488ccdedbf8077e690548dd27acf820')
-    standard_pecl('gearman', '1.1.2', 'fb3bc8df2d017048726d5654459e8433')
-    standard_pecl('rdkafka', '3.0.0', 'c798343029fd4a7c8fe3fae365d438df')
-    standard_pecl('mailparse', '2.1.6', '0f84e1da1d074a4915a9bcfe2319ce84')
-    standard_pecl('memcache', '2.2.7', '171e3f51a9afe18b76348ddf1c952141')
-    standard_pecl('mongo', '1.6.14', '19cd8bd94494f924ce8314f304fd83b6')
-    standard_pecl('mongodb', '1.2.3', '133c77a004c5b26fa2cea8eff2cf46a1')
-    standard_pecl('msgpack', '0.5.7', 'b87b5c5e0dab9f41c824201abfbf363d')
-    standard_pecl('protocolbuffers', '0.2.6', 'a304ca632b0d7c5710d5590ac06248a9')
-    standard_pecl('redis', '3.1.0', '897400f375ef6a9288fa3cb07c971786')
-    standard_pecl('solr', '2.4.0', '2c9accf66681a3daaaf371bc07e44902')
-    standard_pecl('sundown', '0.3.11', 'c1397e9d3312226ec6c84e8e34c717a6')
-    standard_pecl('xdebug', '2.5.0', '5306da5948e195c2e4585c9abd7741f9')
-    standard_pecl('yaf', '2.3.5', '77d5d9d6c8471737395350966986bc2e')
-    amqppecl_recipe.cook
-    luapecl_recipe.cook
-    phpprotobufpecl_recipe.cook
-    phalcon_recipe.cook
-    suhosinpecl_recipe.cook
-    twigpecl_recipe.cook
-    xcachepecl_recipe.cook
-    xhprofpecl_recipe.cook
-    memcachedpecl_recipe.cook
+    @extensions.each do |recipe|
+      recipe.cook
+    end
 
     if OraclePeclRecipe.oracle_sdk?
       system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
@@ -240,96 +265,24 @@ class Php5Meal
   private
 
   def files_hashs
-      rabbitmq_recipe.send(:files_hashs) +
-      amqppecl_recipe.send(:files_hashs) +
-      lua_recipe.send(:files_hashs) +
-      luapecl_recipe.send(:files_hashs) +
-      hiredis_recipe.send(:files_hashs) +
-      librdkafka_recipe.send(:files_hashs) +
-      phpiredis_recipe.send(:files_hashs) +
-      phpprotobufpecl_recipe.send(:files_hashs) +
-      phalcon_recipe.send(:files_hashs) +
-      suhosinpecl_recipe.send(:files_hashs) +
-      twigpecl_recipe.send(:files_hashs) +
-      xcachepecl_recipe.send(:files_hashs) +
-      xhprofpecl_recipe.send(:files_hashs) +
+      @native_modules.map(&:files_hashs).flatten +
+      @extensions.map(&:files_hashs).flatten +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
-      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
-      libmemcached_recipe.send(:files_hashs) +
-      memcachedpecl_recipe.send(:files_hashs) +
-      @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
-  end
-
-  def standard_pecl(name, version, md5)
-    @pecl_recipes ||= []
-    recipe = PeclRecipe.new(name, version, md5: md5,
-                                           php_path: php_recipe.path)
-    recipe.cook
-    @pecl_recipes << recipe
-  end
-
-  def snmp_recipe
-    SnmpRecipe.new(php_recipe.path)
-  end
-
-  def libmemcached_recipe
-    @libmemcached_recipe ||= LibmemcachedRecipe.new('libmemcached', '1.0.18')
-  end
-
-  def memcachedpecl_recipe
-    @memcachedpecl_recipe ||= MemcachedPeclRecipe.new('memcached', '2.2.0', php_path: php_recipe.path, libmemcached_path: libmemcached_recipe.path)
+      (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : [])
   end
 
   def php_recipe
+    rabbitmq_recipe = @native_modules.detect{|r| r.name=='rabbitmq'}
+    hiredis_recipe = @native_modules.detect{|r| r.name=='hiredis'}
+    libmemcached_recipe = @native_modules.detect{|r| r.name=='libmemcached'}
+    ioncube_recipe = @extensions.detect{|r| r.name=='ioncube'}
+
     @php_recipe ||= Php5Recipe.new(@name, @version, {
       rabbitmq_path: File.join(rabbitmq_recipe.path, "rabbitmq-c-#{rabbitmq_recipe.version}", 'librabbitmq'),
       hiredis_path: hiredis_recipe.path,
       libmemcached_path: libmemcached_recipe.path,
       ioncube_path: ioncube_recipe.path
     }.merge(DetermineChecksum.new(@options).to_h))
-  end
-
-  def luapecl_recipe
-    @luapecl_recipe ||= LuaPeclRecipe.new('lua', '1.1.0', md5: '58bd532957473f2ac87f1032c4aa12b5',
-                                                          php_path: php_recipe.path,
-                                                          lua_path: lua_recipe.path)
-  end
-
-
-  def phpprotobufpecl_recipe
-    @phpprotobufpecl_recipe ||= PHPProtobufPeclRecipe.new('phpprotobuf', '0.11.1', md5: 'adbf5214bfd44ce18962dd49f5640552',
-                                                                                       php_path: php_recipe.path)
-  end
-
-  def ioncube_recipe
-    @ioncube ||= IonCubeRecipe.new('ioncube', '6.0.8', md5: '49851554b1e448142b8576e399ae3b19')
-  end
-
-  def phalcon_recipe
-    @phalcon_recipe ||= PhalconRecipe.new('phalcon', '3.0.3', md5: '5a6c376782e50c63735601f92aec6a7d',
-                                                              php_path: php_recipe.path)
-    @phalcon_recipe.set_php_version('php5')
-    @phalcon_recipe
-  end
-
-  def suhosinpecl_recipe
-    @suhosinpecl_recipe ||= SuhosinPeclRecipe.new('suhosin', '0.9.38', md5: '0c26402752b0aff69e4b891f062a52bf',
-                                                                         php_path: php_recipe.path)
-  end
-
-  def twigpecl_recipe
-    @twigpecl_recipe ||= TwigPeclRecipe.new('twig', '1.27.0', md5: '9f1f740e3fd0570b16a8b150fb0380de',
-                                                              php_path: php_recipe.path)
-  end
-
-  def xcachepecl_recipe
-    @xcachepecl_recipe ||= XcachePeclRecipe.new('xcache', '3.2.0', md5: '8b0a6f27de630c4714ca261480f34cda',
-                                                                   php_path: php_recipe.path)
-  end
-
-  def xhprofpecl_recipe
-    @xhprofpecl_recipe ||= XhprofPeclRecipe.new('xhprof', '0bbf2a2ac3', md5: '1df4aebf1cb24e7cf369b3af357106fc',
-                                                                        php_path: php_recipe.path)
   end
 
   def oracle_recipe
