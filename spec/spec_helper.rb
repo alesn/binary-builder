@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'fileutils'
+require 'open3'
 require 'tmpdir'
 
 RSpec.configure do |config|
@@ -88,14 +89,14 @@ RSpec.configure do |config|
   def tar_contains_file(filename)
     expect(@binary_tarball_location).to be
 
-    o, status = run("tar --wildcards --list --verbose -f #{@binary_tarball_location} #{filename}")
+    o, status = Open3.capture2e("tar --wildcards --list --verbose -f #{@binary_tarball_location} #{filename}")
     return false unless status.success?
     o.split(/[\r\n]+/).all? do |line|
       m = line.match(/(\S+) -> (\S+)$/)
       return true unless m
       oldfile, newfile = m[1,2]
       return false if newfile.start_with?('/')
-      testthing(tarfile, File.dirname(oldfile) + '/' + newfile)
+      tar_conatins_file(File.dirname(oldfile) + '/' + newfile)
     end
   end
 end
