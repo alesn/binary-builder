@@ -183,7 +183,8 @@ class PhpMeal
      "sudo ln -fs /usr/lib/x86_64-linux-gnu/libldap_r.so /usr/lib/libldap_r.so"]
 
     if OraclePeclRecipe.oracle_sdk?
-      common + ["sudo ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so"]
+      common + ["sudo ln -s libclntsh.so.* /oracle/libclntsh.so"]
+      # common + ["sudo (cd /oracle && ln -s libclntsh.so.* libclntsh.so)"]
     else
       common
     end
