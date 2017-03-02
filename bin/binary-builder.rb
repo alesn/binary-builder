@@ -73,6 +73,9 @@ recipe_options = DetermineChecksum.new(options).to_h
 if options[:php_extensions_file]
   recipe_options[:php_extensions_file] = options[:php_extensions_file]
 end
+
+puts "-----------------~~~~~~~~~~~~~~~~~~~~~~~~~~~~name: #{options[:name]} version: #{options[:version]}-----------------------------~~~~~~~~~~~~~~~~~~~~\n"
+
 recipe = recipes[options[:name]].new(
   options[:name],
   options[:version],
