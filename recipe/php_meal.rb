@@ -145,6 +145,7 @@ class PhpMeal
 
   def php_common_apt_packages
     %w(libaspell-dev
+      libbz2-dev
       libc-client2007e-dev
       libcurl4-openssl-dev
       libexpat1-dev
