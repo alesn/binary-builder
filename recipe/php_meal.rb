@@ -155,6 +155,8 @@ class PhpMeal
       libjpeg-dev
       libkrb5-dev
       libldap2-dev
+      libmagickcore-dev
+      libmagickwand-dev
       libmcrypt-dev
       libpng12-dev
       libpspell-dev
