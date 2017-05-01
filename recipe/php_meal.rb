@@ -153,6 +153,7 @@ class PhpMeal
       libgdbm-dev
       libgmp-dev
       libjpeg-dev
+      libkrb5-dev
       libldap2-dev
       libmcrypt-dev
       libpng12-dev
