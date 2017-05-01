@@ -149,6 +149,7 @@ class PhpMeal
       libc-client2007e-dev
       libcurl4-openssl-dev
       libexpat1-dev
+      libfreetype6-dev
       libgdbm-dev
       libgmp-dev
       libjpeg-dev
