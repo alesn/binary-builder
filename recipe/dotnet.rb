@@ -37,7 +37,7 @@ class DotNetRecipe < BaseRecipe
   end
 
   def archive_files
-    ["#{tmp_path}/cli/artifacts/ubuntu.14.04-x64/stage2/*"]
+    ["#{tmp_path}/cli/artifacts/ubuntu.16.04-x64/stage2/*"]
   end
 
   def archive_filename
