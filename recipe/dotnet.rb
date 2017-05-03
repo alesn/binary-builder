@@ -26,7 +26,7 @@ class DotNetRecipe < BaseRecipe
                 liburcu1 \
                 libpython2.7 \
                 liblttng-ust0 \
-                libllvm3.6 \
+                libllvm3.6v5 \
                 liblldb-3.6
               CMD
 
