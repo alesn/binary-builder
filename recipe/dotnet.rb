@@ -23,7 +23,7 @@ class DotNetRecipe < BaseRecipe
                 devscripts \
                 debhelper \
                 libunwind8 \
-                liburcu1 \
+                liburcu4 \
                 libpython2.7 \
                 liblttng-ust0 \
                 libllvm3.6v5 \
