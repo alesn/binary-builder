@@ -1,5 +1,6 @@
 # encoding: utf-8
 require_relative 'base'
+require_relative '../lib/geoip_downloader'
 
 class NginxRecipe < BaseRecipe
   def computed_options
@@ -14,6 +15,7 @@ class NginxRecipe < BaseRecipe
       '--with-http_random_index_module',
       '--with-http_secure_link_module',
       '--with-http_stub_status_module',
+      '--with-http_geoip_module',
       '--without-http_uwsgi_module',
       '--without-http_scgi_module',
       '--with-pcre',
