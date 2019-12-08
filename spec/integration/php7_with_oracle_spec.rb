@@ -4,19 +4,16 @@ require 'fileutils'
 require 'open-uri'
 
 describe 'building a binary', :run_oracle_php_tests do
-  context 'when php7.1 is specified with oracle libraries' do
+  context 'when php7.4 is specified with oracle libraries' do
     before(:all) do
-      @extensions_dir = Dir.mktmpdir(nil, './spec')
-      extensions_file = File.join(@extensions_dir, 'php7-extensions.yml')
+      extensions_file = File.join('spec', 'assets', 'php-extensions.yml')
 
-      File.write(extensions_file, open(php_extensions_source('7')).read)
-      run_binary_builder('php7', '7.1.0', "--md5=ec2218f97b4edbc35a2d7919ff37a662  --php-extensions-file=#{extensions_file}")
-      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.1.0-linux-x64.tgz')).first
+      run_binary_builder('php7', '7.4.0', "--sha256=004a1a8176176ee1b5c112e73d705977507803f425f9e48cb4a84f42b22abf22 --php-extensions-file=#{extensions_file}")
+      @binary_tarball_location = Dir.glob(File.join(Dir.pwd, 'php7-7.4.0-linux-x64.tgz')).first
     end
 
     after(:all) do
       FileUtils.rm(@binary_tarball_location)
-      FileUtils.rm_rf(@extensions_dir)
     end
 
     it 'can load the oci8.so and pdo_oci.so PHP extensions' do
@@ -24,7 +21,7 @@ describe 'building a binary', :run_oracle_php_tests do
       php_oracle_module_arguments = '-dextension=oci8.so -dextension=pdo_oci.so -dextension=pdo.so'
       php_info_modules_command = '-r "phpinfo(INFO_MODULES);"'
 
-      php_info_with_oracle_modules = %{./spec/assets/php-exerciser.sh 7.1.0 #{File.basename(@binary_tarball_location)} ./php/bin/php #{php_oracle_module_arguments} #{php_info_modules_command}}
+      php_info_with_oracle_modules = %{./spec/assets/php-exerciser.sh #{File.basename(@binary_tarball_location)} ./php/bin/php #{php_oracle_module_arguments} #{php_info_modules_command}}
 
       output, status = run(php_info_with_oracle_modules)
 

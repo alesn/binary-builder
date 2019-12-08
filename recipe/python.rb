@@ -1,9 +1,16 @@
 # encoding: utf-8
 require 'fileutils'
 require 'mini_portile'
+require_relative '../lib/openssl_replace'
 require_relative 'base'
 
 class PythonRecipe < BaseRecipe
+  def initialize(name, version, options = {})
+    super name, version, options
+    # override openssl in container
+    OpenSSLReplace.replace_openssl
+  end
+
   def computed_options
     [
       '--enable-shared',
