@@ -178,7 +178,9 @@ class PhpMeal
       libtidy-dev
       libenchant-dev
       firebird-dev
-      librecode-dev)
+      librecode-dev
+      libwebp-dev
+      libssh2-1-dev)
   end
 
   def install_libuv
