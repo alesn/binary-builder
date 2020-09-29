@@ -10,3 +10,4 @@ mini_portile/
 .idea/
 oracle_client_libs
 *deb*
+openssl-OpenSSL_1_1_0g/

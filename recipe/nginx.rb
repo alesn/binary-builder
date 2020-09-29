@@ -22,6 +22,7 @@ class NginxRecipe < BaseRecipe
       '--with-http_random_index_module',
       '--with-http_secure_link_module',
       '--with-http_stub_status_module',
+      '--with-http_geoip_module',
       '--without-http_uwsgi_module',
       '--without-http_scgi_module',
       '--with-pcre',
@@ -29,6 +30,12 @@ class NginxRecipe < BaseRecipe
       '--with-cc-opt=-fPIE -pie',
       '--with-ld-opt=-fPIE -pie -z now',
     ]
+  end
+
+  # get files for geoip
+  def cook
+    install_apt('libgeoip-dev')
+    super
   end
 
   def install
@@ -45,10 +52,34 @@ class NginxRecipe < BaseRecipe
   end
 
   def setup_tar
+    `mkdir -p #{path}/lib/`
+    `cp -a /usr/lib/x86_64-linux-gnu/libGeoIP.so* #{path}/lib/`
     `rm -Rf #{path}/html/ #{path}/conf/*`
   end
 
   def url
     "http://nginx.org/download/nginx-#{version}.tar.gz"
   end
+
+  private
+
+  def install_apt(packages)
+    STDOUT.print "Running 'install dependencies' for #{@name} #{@version}... "
+    if run("sudo apt-get update && sudo apt-get -y install #{packages}")
+      STDOUT.puts "OK"
+    else
+      raise "Failed to complete install dependencies task"
+    end
+  end
+
+  def run(command)
+    output = `#{command}`
+    if $?.success?
+      return true
+    else
+      STDOUT.puts "ERROR, output was:"
+      STDOUT.puts output
+      return false
+    end
+  end  
 end

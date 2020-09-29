@@ -30,7 +30,9 @@ class ArchiveRecipe
           `zip #{File.join(output_dir, @recipe.archive_filename)} -r .`
         end
       else
-        `ls -A #{dir} | xargs tar czf #{@recipe.archive_filename} -C #{dir}`
+        # '/nginx' appended after #{dir} here is a workaround for nginx buildpack now 
+        # expecting files directly in the root directory, not under 'nginx'
+        `ls -A #{dir}/nginx | xargs tar czf #{@recipe.archive_filename} -C #{dir}/nginx`
       end
       puts 'OK'
     end
